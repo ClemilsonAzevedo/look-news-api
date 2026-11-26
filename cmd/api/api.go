@@ -30,7 +30,7 @@ func InitServer() error {
 	srv := fuego.NewServer(
 		fuego.WithAddr(":"+PORT),
 		fuego.WithEngineOptions(fuego.WithOpenAPIConfig(fuego.OpenAPIConfig{
-			JSONFilePath:         "doc/openapi.json",
+			JSONFilePath:         "docs/openapi.json",
 			PrettyFormatJSON:     true,
 			DisableDefaultServer: true,
 			Info: &openapi3.Info{

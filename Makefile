@@ -1,34 +1,48 @@
-BINARY_NAME=look-news
-MAIN_PKG=./cmd/web
-BIN_DIR=bin
+GO ?= go
+BINARY_NAME ?= look-news
+MAIN_PKG ?= ./cmd/web
+BIN_DIR ?= bin
+BINARY := $(BIN_DIR)/$(BINARY_NAME)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help run build clean fmt vet tidy lint download
+.PHONY: help run build test clean fmt fmt-check vet lint check tidy download
 
-help: ## Mostra esta ajuda
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
+help: ## Exibe os comandos disponíveis
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-run: ## Roda a aplicação
-	go run $(MAIN_PKG)
+run: ## Inicia a aplicação localmente
+	$(GO) run $(MAIN_PKG)
 
-build: ## Compila o binário em bin/
-	go build -o $(BIN_DIR)/$(BINARY_NAME) $(MAIN_PKG)
+build: ## Compila a aplicação no diretório configurado
+	@mkdir -p "$(BIN_DIR)"
+	$(GO) build -o "$(BINARY)" $(MAIN_PKG)
 
-clean: ## Remove os artefatos de build
-	go clean
-	rm -rf $(BIN_DIR)
+test: ## Executa os testes de todos os pacotes
+	$(GO) test ./...
 
-fmt: ## Formata o código
-	go fmt ./...
+clean: ## Remove o binário gerado pelo build
+	@rm -f "$(BINARY)"
 
-vet: ## Analisa o código com go vet
-	go vet ./...
+fmt: ## Formata o código Go
+	$(GO) fmt ./...
 
-tidy: ## Organiza as dependências
-	go mod tidy
+fmt-check: ## Verifica a formatação sem alterar arquivos
+	@files="$$(gofmt -l $$($(GO) list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}{{range .TestGoFiles}}{{$$.Dir}}/{{.}} {{end}}{{range .XTestGoFiles}}{{$$.Dir}}/{{.}} {{end}}' ./...))"; \
+	if [ -n "$$files" ]; then \
+		printf 'Arquivos Go precisam de formatação:\n%s\n' "$$files"; \
+		exit 1; \
+	fi
 
-download: ## faz download das dependências
-	go mod download
+vet: ## Executa a análise estática com go vet
+	$(GO) vet ./...
 
-lint: fmt vet ## Roda fmt e vet
+lint: fmt-check vet ## Verifica a formatação e executa go vet
+
+check: test lint ## Executa testes e verificações estáticas
+
+tidy: ## Organiza as dependências do módulo
+	$(GO) mod tidy
+
+download: ## Baixa as dependências do módulo
+	$(GO) mod download

@@ -1,19 +1,15 @@
-<h1 align="center">Look News API</h1>
+# Look News API
 
-<p align="center">
-  <img src="assets/look-news-logo.png" alt="Logo do Look News" width="520" />
-</p>
+![Logo do Look News](assets/look-news-logo.png)
 
-<p align="center">
-  API HTTP em Go para buscar e servir artigos de feeds RSS, Atom e RDF.
-</p>
+API HTTP em Go para buscar e servir artigos de feeds RSS, Atom e RDF.
 
-[API em produção](https://look-news-api.onrender.com) · [Swagger interativo](https://look-news-api.onrender.com/swagger) · [Especificação OpenAPI](doc/openapi.json)
+[API em produção](https://look-news-api.onrender.com) · [Swagger interativo](https://look-news-api.onrender.com/swagger) · [Especificação OpenAPI](docs/openapi.json)
 
 
 ## Visão geral
 
-A API agrega artigos de feeds RSS, Atom e RDF em uma resposta JSON uniforme. O contrato OpenAPI é publicado pelo servidor Fuego e mantido também em [`doc/openapi.json`](doc/openapi.json); use o Swagger para explorar os parâmetros, os modelos e as respostas por status HTTP.
+A API agrega artigos de feeds RSS, Atom e RDF em uma resposta JSON uniforme. O contrato OpenAPI é publicado pelo servidor Fuego e mantido também em [`docs/openapi.json`](docs/openapi.json); use o Swagger para explorar os parâmetros, os modelos e as respostas por status HTTP.
 
 ### Comportamento
 
@@ -30,11 +26,13 @@ A API agrega artigos de feeds RSS, Atom e RDF em uma resposta JSON uniforme. O c
 
 ## Executar localmente
 
-Na raiz do repositório, entre na pasta da API e baixe as dependências:
+Execute os comandos a partir da raiz do projeto. O `make` é opcional; ao rodá-lo, você verá os comandos disponíveis e suas descrições.
+
+### Recomendado: usar o Makefile
 
 ```bash
-cd api
-go mod download
+make
+make download
 ```
 
 Opcionalmente, crie um arquivo `.env` para configurar a porta:
@@ -43,17 +41,21 @@ Opcionalmente, crie um arquivo `.env` para configurar a porta:
 PORT=8080
 ```
 
-Inicie o servidor:
+Inicie o servidor com:
 
 ```bash
-go run ./cmd/web
+make run
 ```
 
-Ou use o Makefile:
+O Makefile também oferece `make build` para compilar a API e `make lint` para formatar o código e executar `go vet ./...`.
+
+### Alternativa manual com Go
+
+Se preferir executar os comandos Go diretamente, baixe as dependências e inicie o servidor:
 
 ```bash
-make download
-make run
+go mod download
+go run ./cmd/web
 ```
 
 Por padrão, a API fica disponível em `http://localhost:8080`. A [documentação Swagger local](http://localhost:8080/swagger) permite explorar a rota.
@@ -151,7 +153,7 @@ Se o valor corresponder ao `ETag` atual, a resposta será `304 Not Modified`, se
 
 ## Desenvolvimento
 
-Execute os comandos abaixo a partir da pasta `api/`:
+Execute os comandos abaixo a partir da raiz do projeto:
 
 ```bash
 go build -o look-news ./cmd/web
@@ -176,4 +178,4 @@ O serviço de produção pode entrar em repouso após períodos sem tráfego; a 
 
 ## Atualização da especificação
 
-As descrições de operações, parâmetros, cabeçalhos, modelos e respostas são declaradas junto à rota Fuego em `internal/feed/http/handler/handler.go`. A configuração global (título, versão e descrição) fica em `cmd/api/api.go`. Ao iniciar o servidor, Fuego atualiza `doc/openapi.json`; revise esse arquivo quando alterar o contrato e mantenha os exemplos deste README alinhados com a implementação.
+As descrições de operações, parâmetros, cabeçalhos, modelos e respostas são declaradas junto à rota Fuego em `internal/feed/http/handler/handler.go`. A configuração global (título, versão e descrição) fica em `cmd/api/api.go`. Ao iniciar o servidor, Fuego atualiza `docs/openapi.json`; revise esse arquivo quando alterar o contrato e mantenha os exemplos deste README alinhados com a implementação.
