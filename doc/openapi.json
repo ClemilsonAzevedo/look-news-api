@@ -1,0 +1,348 @@
+{
+	"components": {
+		"schemas": {
+			"Article": {
+				"properties": {
+					"author": {
+						"type": "string"
+					},
+					"date": {
+						"format": "date-time",
+						"type": "string"
+					},
+					"link": {
+						"type": "string"
+					},
+					"published": {
+						"type": "string"
+					},
+					"source": {
+						"type": "string"
+					},
+					"summary": {
+						"type": "string"
+					},
+					"terms": {
+						"items": {
+							"type": "string"
+						},
+						"type": [
+							"array",
+							"null"
+						]
+					},
+					"title": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"author",
+					"date",
+					"link",
+					"published",
+					"source",
+					"summary",
+					"terms",
+					"title"
+				],
+				"type": "object"
+			},
+			"ErrorItem": {
+				"properties": {
+					"more": {
+						"additionalProperties": {
+							"description": "Additional information about the error"
+						},
+						"description": "Additional information about the error",
+						"type": [
+							"object",
+							"null"
+						]
+					},
+					"name": {
+						"description": "For example, name of the parameter that caused the error",
+						"type": "string"
+					},
+					"reason": {
+						"description": "Human readable error message",
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"reason"
+				],
+				"type": "object"
+			},
+			"HTTPError": {
+				"description": "HTTPError schema",
+				"properties": {
+					"detail": {
+						"description": "Human readable error message",
+						"type": "string"
+					},
+					"errors": {
+						"items": {
+							"$ref": "#/components/schemas/ErrorItem"
+						},
+						"type": [
+							"array",
+							"null"
+						]
+					},
+					"instance": {
+						"type": "string"
+					},
+					"status": {
+						"description": "HTTP status code",
+						"example": 403,
+						"type": "integer"
+					},
+					"title": {
+						"description": "Short title of the error",
+						"type": "string"
+					},
+					"type": {
+						"description": "URL of the error type. Can be used to lookup the error in a documentation",
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"NewsRes": {
+				"description": "NewsRes schema",
+				"properties": {
+					"articles": {
+						"items": {
+							"$ref": "#/components/schemas/Article"
+						},
+						"type": [
+							"array",
+							"null"
+						]
+					},
+					"total": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"articles",
+					"total"
+				],
+				"type": "object"
+			},
+			"unknown-interface": {
+				"description": "unknown-interface schema"
+			}
+		}
+	},
+	"info": {
+		"description": "API HTTP para consultar artigos recentes de feeds RSS, Atom e RDF. Use GET /news com um ou mais parâmetros sources; os resultados incluem apenas artigos da semana corrente, conforme o fuso horário local do servidor. A operação documenta o formato da resposta, o cache HTTP, as consultas condicionais e os erros possíveis.",
+		"title": "Look News API",
+		"version": "0.0.1"
+	},
+	"openapi": "3.1.0",
+	"paths": {
+		"/news": {
+			"get": {
+				"description": "Recebe uma ou mais URLs de feeds e combina os artigos publicados na semana corrente, de acordo com o fuso horário local do servidor. As fontes são processadas na ordem informada e os artigos mantêm a ordem de cada feed; não há ordenação global. Se uma fonte estiver indisponível, artigos armazenados em cache podem ser usados. Se todas as fontes falharem e não houver artigos em cache, a operação retorna 503. Como o servidor acessa as URLs informadas, envie apenas feeds públicos e confiáveis.",
+				"operationId": "listNewsArticles",
+				"parameters": [
+					{
+						"description": "URL pública de um feed RSS, Atom ou RDF. Repita este parâmetro para cada fonte; os artigos serão combinados na ordem informada.",
+						"examples": {
+							"Two feeds": {
+								"value": [
+									"https://example.com/feed.xml",
+									"https://example.org/rss"
+								]
+							}
+						},
+						"in": "query",
+						"name": "sources",
+						"required": true,
+						"schema": {
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						}
+					},
+					{
+						"description": "ETag recebido anteriormente. Se o valor corresponder exatamente à representação atual, a resposta será 304 e não terá corpo.",
+						"examples": {
+							"ETag atual": {
+								"value": "\"abc123\""
+							}
+						},
+						"in": "header",
+						"name": "If-None-Match",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "header",
+						"name": "Accept",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"examples": {
+									"Resposta com artigos": {
+										"value": {
+											"articles": [
+												{
+													"author": "Redação",
+													"date": "2026-11-26T12:00:00Z",
+													"link": "https://example.com/articles/news",
+													"published": "Thu, 26 Nov 2026 12:00:00 GMT",
+													"source": "Example News",
+													"summary": "Um resumo do artigo fornecido pela fonte.",
+													"terms": [
+														"tecnologia"
+													],
+													"title": "Como os feeds estruturam notícias"
+												}
+											],
+											"total": 1
+										}
+									},
+									"Sem artigos": {
+										"value": {
+											"articles": null,
+											"total": 0
+										}
+									}
+								},
+								"schema": {
+									"$ref": "#/components/schemas/NewsRes"
+								}
+							}
+						},
+						"description": "Consulta concluída. A lista pode estar vazia.",
+						"headers": {
+							"Cache-Control": {
+								"examples": {
+									"Diretivas de cache": {
+										"value": "max-age=60, stale-while-revalidate=300"
+									}
+								},
+								"schema": {
+									"type": "string"
+								}
+							},
+							"ETag": {
+								"examples": {
+									"ETag atual": {
+										"value": "\"abc123\""
+									}
+								},
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"304": {
+						"description": "A representação corresponde ao valor informado em If-None-Match; a resposta não contém corpo.",
+						"headers": {
+							"Cache-Control": {
+								"examples": {
+									"Diretivas de cache": {
+										"value": "max-age=60, stale-while-revalidate=300"
+									}
+								},
+								"schema": {
+									"type": "string"
+								}
+							},
+							"ETag": {
+								"examples": {
+									"ETag atual": {
+										"value": "\"abc123\""
+									}
+								},
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"400": {
+						"content": {
+							"application/problem+json": {
+								"examples": {
+									"Parâmetro obrigatório ausente": {
+										"value": {
+											"detail": "cannot parse request parameter: sources is a required query param",
+											"status": 400,
+											"title": "Query Param Not Found"
+										}
+									}
+								},
+								"schema": {
+									"$ref": "#/components/schemas/HTTPError"
+								}
+							}
+						},
+						"description": "Parâmetro obrigatório ausente ou inválido."
+					},
+					"500": {
+						"content": {
+							"application/problem+json": {
+								"examples": {
+									"Erro interno": {
+										"value": {
+											"detail": "An unexpected error occurred",
+											"status": 500,
+											"title": "Internal Server Error"
+										}
+									}
+								},
+								"schema": {
+									"$ref": "#/components/schemas/HTTPError"
+								}
+							}
+						},
+						"description": "Erro interno inesperado."
+					},
+					"503": {
+						"content": {
+							"application/problem+json": {
+								"examples": {
+									"Fontes indisponíveis": {
+										"value": {
+											"detail": "all sources failed, no cache available",
+											"status": 503,
+											"title": "sources unavailable"
+										}
+									}
+								},
+								"schema": {
+									"$ref": "#/components/schemas/HTTPError"
+								}
+							}
+						},
+						"description": "Todas as fontes falharam e não há artigos em cache disponíveis."
+					}
+				},
+				"summary": "Listar notícias recentes",
+				"tags": [
+					"Notícias"
+				]
+			}
+		}
+	},
+	"tags": [
+		{
+			"description": "Operações para consultar artigos recentes em feeds RSS, Atom e RDF.",
+			"name": "Notícias"
+		}
+	]
+}

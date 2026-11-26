@@ -1,0 +1,34 @@
+BINARY_NAME=look-news
+MAIN_PKG=./cmd/web
+BIN_DIR=bin
+
+.DEFAULT_GOAL := help
+
+.PHONY: help run build clean fmt vet tidy lint download
+
+help: ## Mostra esta ajuda
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
+
+run: ## Roda a aplicação
+	go run $(MAIN_PKG)
+
+build: ## Compila o binário em bin/
+	go build -o $(BIN_DIR)/$(BINARY_NAME) $(MAIN_PKG)
+
+clean: ## Remove os artefatos de build
+	go clean
+	rm -rf $(BIN_DIR)
+
+fmt: ## Formata o código
+	go fmt ./...
+
+vet: ## Analisa o código com go vet
+	go vet ./...
+
+tidy: ## Organiza as dependências
+	go mod tidy
+
+download: ## faz download das dependências
+	go mod download
+
+lint: fmt vet ## Roda fmt e vet
